@@ -19,10 +19,17 @@ const VotingSystem = () => {
     };
   }, []);
 
+  const userId = 'user-unique-id'; // Replace with an actual unique user identifier
+
   const handleVote = (type) => {
+    if (userVote === type) {
+      return; // No action if user is trying to vote the same again
+    }
+
     const ws = new WebSocket('ws://localhost:3001');
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type }));
+      ws.send(JSON.stringify({ type, userId }));
+      setUserVote(type);
     };
     ws.onclose = () => {
       console.log(`Connection closed after sending ${type} vote`);
@@ -31,10 +38,21 @@ const VotingSystem = () => {
       console.error('WebSocket error:', error);
     };
   };
-  
 
   const handleReset = () => {
-    handleVote('reset');
+    const password = prompt("Enter password to reset votes:");
+    if (password) {
+      const ws = new WebSocket('ws://localhost:3001');
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'reset', password }));
+      };
+      ws.onclose = () => {
+        console.log('Connection closed after sending reset vote');
+      };
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    }
   };
 
   return (

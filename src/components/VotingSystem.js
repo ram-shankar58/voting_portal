@@ -7,7 +7,7 @@ const VotingSystem = () => {
   const [userVote, setUserVote] = useState(null);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('ws://localhost:3001');
 
     ws.onmessage = (event) => {
       const updatedVotes = JSON.parse(event.data);
@@ -20,16 +20,21 @@ const VotingSystem = () => {
   }, []);
 
   const handleVote = (type) => {
-    if (userVote === type) {
-      setUserVote(null);
-    } else {
-      setUserVote(type);
-    }
-
-    const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('ws://localhost:3001');
     ws.onopen = () => {
       ws.send(JSON.stringify({ type }));
     };
+    ws.onclose = () => {
+      console.log(`Connection closed after sending ${type} vote`);
+    };
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  };
+  
+
+  const handleReset = () => {
+    handleVote('reset');
   };
 
   return (
@@ -57,6 +62,15 @@ const VotingSystem = () => {
         <p className="subtitle is-4">
           <strong>{votes.for}</strong> For | <strong>{votes.against}</strong> Against
         </p>
+      </div>
+      <div className="box mt-6">
+        <button
+          onClick={handleReset}
+          className="button is-warning is-large"
+          style={{ backgroundColor: '#ffdd57' }}
+        >
+          Reset Votes
+        </button>
       </div>
     </div>
   );

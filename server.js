@@ -1,22 +1,21 @@
-// /server.js
 const WebSocket = require('ws');
-
-const wss = new WebSocket.Server({ port: 8080 });
+const server = require('http').createServer();
+const wss = new WebSocket.Server({ server });
 
 let votes = { for: 0, against: 0 };
 
 wss.on('connection', (ws) => {
-  // Send current votes to the newly connected client
   ws.send(JSON.stringify(votes));
 
   ws.on('message', (message) => {
-    const vote = JSON.parse(message);
+    const { type } = JSON.parse(message);
 
-    // Update votes based on the received vote type
-    if (vote.type === 'for') {
-      votes.for++;
-    } else if (vote.type === 'against') {
-      votes.against++;
+    if (type === 'for') {
+      votes.for += 1;
+    } else if (type === 'against') {
+      votes.against += 1;
+    } else if (type === 'reset') {
+      votes = { for: 0, against: 0 };
     }
 
     // Broadcast the updated votes to all connected clients
@@ -26,4 +25,8 @@ wss.on('connection', (ws) => {
       }
     });
   });
+});
+
+server.listen(3001, () => {
+  console.log('WebSocket server is listening on port 3001');
 });

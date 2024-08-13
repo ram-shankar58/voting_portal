@@ -5,17 +5,28 @@ import { useState, useEffect } from 'react';
 const VotingSystem = () => {
   const [votes, setVotes] = useState({ for: 0, against: 0 });
   const [userVote, setUserVote] = useState(null);
+  const ws = useRef(null);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3001');
+    ws.current = new WebSocket('wss://voting-portal-seds.onrender.com');
 
-    ws.onmessage = (event) => {
+    ws.current.onmessage = (event) => {
       const updatedVotes = JSON.parse(event.data);
       setVotes(updatedVotes);
     };
 
+    ws.current.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    ws.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
     return () => {
-      ws.close();
+      if (ws.current) {
+        ws.current.close();
+      }
     };
   }, []);
 
@@ -26,32 +37,18 @@ const VotingSystem = () => {
       return; // No action if user is trying to vote the same again
     }
 
-    const ws = new WebSocket('ws://localhost:3001');
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type, userId }));
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type, userId }));
       setUserVote(type);
-    };
-    ws.onclose = () => {
-      console.log(`Connection closed after sending ${type} vote`);
-    };
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+    }
   };
 
   const handleReset = () => {
     const password = prompt("Enter password to reset votes:");
     if (password) {
-      const ws = new WebSocket('ws://localhost:3001');
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ type: 'reset', password }));
-      };
-      ws.onclose = () => {
-        console.log('Connection closed after sending reset vote');
-      };
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({ type: 'reset', password }));
+      }
     }
   };
 

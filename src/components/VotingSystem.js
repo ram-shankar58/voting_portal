@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const VotingSystem = () => {
   const [votes, setVotes] = useState({ for: 0, against: 0 });

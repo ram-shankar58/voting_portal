@@ -8,7 +8,7 @@ const VotingSystem = () => {
   const ws = useRef(null);
 
   useEffect(() => {
-    ws.current = new WebSocket('ws://voting-portal-seds.onrender.com');
+    ws.current = new WebSocket('wss://voting-portal-seds.onrender.com');
 
     ws.current.onmessage = (event) => {
       const updatedVotes = JSON.parse(event.data);
